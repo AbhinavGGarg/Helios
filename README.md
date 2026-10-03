@@ -87,6 +87,16 @@ docker compose up -d --build
 - **Web target:** submit an `http(s)` URL (from inside the backend container, use `http://host.docker.internal:3001` for the bundled Juice Shop).
 - **Public repo:** submit a repository root URL; Helios clones it inside the backend container and scans that snapshot — nothing is cloned into your workspace.
 
+## Deploy (live demo)
+
+Helios is built to run locally, but you can stand up a hosted instance for demos. The backend deploys to **Render** and the frontend to **Vercel**.
+
+**Backend (Render).** The repo ships a `render.yaml` blueprint. In Render, create a new Blueprint from this repo; it builds `docker/Dockerfile.backend` as a web service. Set these secrets in the dashboard (they are `sync: false` in the blueprint, never committed): `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally `CORS_ALLOW_ORIGINS`. A hosted instance has no local Ollama, so it uses an OpenAI-compatible provider (default base URL points at Featherless). Security tooling is memory-heavy, so use at least the `starter` plan.
+
+**Frontend (Vercel).** Deploy the Next.js app and set `BACKEND_API_URL` to your Render backend URL. The built-in `/api/*` proxy forwards browser requests to the backend, so no CORS setup is needed in that path.
+
+> Note: the hosted path trades the "nothing leaves your machine" guarantee for a public demo URL. For real use, self-host with the local Ollama default — that is the point of the project.
+
 ## Responsible use
 
 Helios is for testing systems you own or are explicitly authorised to assess. Scanning targets without permission may be illegal. By default, only an allowlist of safe public examples (`example.com`, `scanme.nmap.org`, `testphp.vulnweb.com`) is treated as sanctioned; keep `ENFORCE_TARGET_ALLOWLIST=true` in shared or production deployments.
