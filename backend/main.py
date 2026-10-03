@@ -1,4 +1,4 @@
-"""Panoptes — Agentic Penetration Testing System — FastAPI backend."""
+"""Helios — Agentic Penetration Testing System — FastAPI backend."""
 
 import os
 
@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers.chat_router import router as chat_router
 from .routers.scan_router import router as scan_router
 
-app = FastAPI(title="Panoptes Pentest API")
+app = FastAPI(title="Helios Pentest API")
 
 _origins_env = os.getenv(
     "CORS_ALLOW_ORIGINS", "http://localhost:3000,http://frontend:3000"
@@ -26,7 +26,7 @@ app.add_middleware(
 @app.get("/hello")
 def hello():
     """Health check — kept for backwards compatibility."""
-    return {"message": "Panoptes Pentest API is running"}
+    return {"message": "Helios Pentest API is running"}
 
 
 app.include_router(scan_router)

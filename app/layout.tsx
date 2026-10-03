@@ -22,7 +22,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Panoptes",
+  title: "Helios",
   description: "Autonomous penetration testing with agent-driven workflows",
   icons: {
     icon: "/image.png",

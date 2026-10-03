@@ -275,7 +275,7 @@ export default function Home() {
                 <div className="rounded-2xl border border-white/15 bg-white/8 p-2.5">
                   <Image
                     src="/image.png"
-                    alt="Panoptes logo"
+                    alt="Helios logo"
                     width={40}
                     height={40}
                     className="rounded-xl"
@@ -283,7 +283,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-100/88">
-                    Panoptes
+                    Helios
                   </p>
                   <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
                     Agentic Security Pipeline

@@ -180,7 +180,7 @@ export default function ReportPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `panoptes-report-${id.slice(0, 8)}.md`;
+    a.download = `helios-report-${id.slice(0, 8)}.md`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -241,7 +241,7 @@ export default function ReportPage() {
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/8 px-2.5 py-1 font-mono">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-200" />
-                    Panoptes Pentest v0.1
+                    Helios Pentest v0.1
                   </span>
                 </div>
 

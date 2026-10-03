@@ -1,4 +1,4 @@
-"""Planner module for Panoptes.
+"""Planner module for Helios.
 
 Inspects a target (URL or filesystem path), generates an architecture snapshot,
 and uses an LLM to dynamically select the correct security agents.

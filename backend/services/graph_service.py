@@ -308,7 +308,7 @@ def _probe_url_headers(url: str) -> dict:
     req = Request(
         url,
         headers={
-            "User-Agent": "Panoptes/1.0 (+security-scan)",
+            "User-Agent": "Helios/1.0 (+security-scan)",
             "Accept": "text/html,*/*;q=0.8",
         },
         method="GET",

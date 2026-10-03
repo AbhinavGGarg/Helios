@@ -1,4 +1,4 @@
-"""Pydantic models for Panoptes scan state and API contracts."""
+"""Pydantic models for Helios scan state and API contracts."""
 
 from enum import Enum
 

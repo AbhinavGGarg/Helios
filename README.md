@@ -1,6 +1,6 @@
-# Panoptes — Autonomous Penetration Testing Platform
+# Helios — Autonomous Penetration Testing Platform
 
-Panoptes is an AI-orchestrated penetration testing platform that combines a LangGraph state machine, industry-standard security tooling, and LLM interpretation into a single automated pipeline. Point it at a web target or a local repository and it will fingerprint the stack, dynamically select the relevant scanners, interpret raw tool output with an LLM, build an attack chain graph, and deliver a structured vulnerability report — all streamed live to the UI.
+Helios is an AI-orchestrated penetration testing platform that combines a LangGraph state machine, industry-standard security tooling, and LLM interpretation into a single automated pipeline. Point it at a web target or a local repository and it will fingerprint the stack, dynamically select the relevant scanners, interpret raw tool output with an LLM, build an attack chain graph, and deliver a structured vulnerability report — all streamed live to the UI.
 
 ## How it works
 
@@ -67,7 +67,7 @@ docker compose -f docker-compose.dev.yml up -d --build
 The backend volume-mounts `./backend` so Python code changes hot-reload without a rebuild. If you change environment variables, prompts, or the Dockerfile, restart the container:
 
 ```bash
-docker restart panoptes-dev-backend
+docker restart helios-dev-backend
 ```
 
 ### 2. Start the frontend
@@ -123,8 +123,8 @@ Submit a repository root URL directly:
 https://github.com/owner/repository
 ```
 
-Panoptes clones the repository inside the backend container runtime (named Docker
-volume mounted at `/var/panoptes/repos`) and scans that snapshot. Nothing is
+Helios clones the repository inside the backend container runtime (named Docker
+volume mounted at `/var/helios/repos`) and scans that snapshot. Nothing is
 cloned into your local workspace.
 
 **Local repository:**
@@ -145,7 +145,7 @@ Out-of-the-box allowlist includes:
 - `scanme.nmap.org`
 - `testphp.vulnweb.com` (demo target with likely findings)
 
-By default, Panoptes now accepts any valid `http(s)` URL target.
+By default, Helios now accepts any valid `http(s)` URL target.
 To re-enable strict host allowlisting, set:
 
 ```bash
@@ -168,10 +168,10 @@ OPENAI_MODEL=<your-featherless-model>
 
 ```bash
 # Stream backend logs
-docker logs panoptes-dev-backend -f
+docker logs helios-dev-backend -f
 
 # Restart backend (after env/prompt changes)
-docker restart panoptes-dev-backend
+docker restart helios-dev-backend
 
 # Stop everything
 docker compose -f docker-compose.dev.yml down

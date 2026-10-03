@@ -1,1 +1,1 @@
-"""Panoptes backend package."""
+"""Helios backend package."""
