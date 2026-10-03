@@ -10,7 +10,7 @@ services:
     dockerfilePath: ./docker/Dockerfile.backend
     dockerContext: .
     plan: free               # $0. Trade-offs: 512MB RAM, sleeps after ~15min idle (slow first request).
-    healthCheckPath: /
+    healthCheckPath: /hello
     autoDeploy: true
     envVars:
       - key: LLM_PROVIDER
