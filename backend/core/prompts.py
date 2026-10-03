@@ -13,7 +13,7 @@ Each finding must match this schema:
     "title": "short title",
     "description": "what the potential vulnerability is and why it may matter",
     "evidence": "relevant snippet from tool output (max 200 chars)",
-    "remediation": "how to fix it",
+    "remediation": "a concrete, actionable fix a developer can apply: what to change and where (e.g. parameterize the query, enable context-aware output encoding, upgrade package X to >= Y, rotate then remove the hardcoded secret and load it from env/secrets manager). Reference the relevant CWE or OWASP category when clear.",
     "component": "which app component this affects (e.g. Login API, Database, Frontend, Session, Auth)"
   }
 ]
@@ -156,8 +156,10 @@ Rules:
 """
 
 REPORT_SYSTEM = (
-    "You are a senior penetration tester writing a professional vulnerability report. "
-    "Write clear, concise Markdown. Be direct. Do not pad with unnecessary text.\n"
+    "You are a senior application-security engineer writing a vulnerability report for the development team that owns this code. "
+    "Your goal is to help them UNDERSTAND and FIX each issue. "
+    "Write clear, concise Markdown. Be direct. Do not pad with unnecessary text. "
+    "Every finding must end with a specific, actionable fix — what to change and where — not generic advice.\n"
     "CRITICAL: Base your report ONLY on the provided findings from automated scans. "
     "DO NOT invent, guess, or hallucinate findings. DO NOT write about 'manual analysis'. "
     "Use confidence-calibrated wording: if exploitation is not explicitly confirmed, frame outcomes as potential/plausible."
@@ -209,6 +211,13 @@ evidence snippet
 ```
 
 **Remediation:** ...
+
+---
+
+## Remediation Plan
+(A prioritized, de-duplicated checklist the development team can work through, ordered critical -> high -> medium -> low. One line per distinct fix, grouped by severity, each naming the affected component and the concrete action. Collapse duplicate fixes that resolve multiple findings into a single item. Omit this section entirely if there are no findings.)
+
+- [ ] **(severity)** Component -- concrete action (e.g. "Parameterize the search query in the product API (resolves findings #2, #5)")
 
 ---
 
