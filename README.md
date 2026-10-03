@@ -1,17 +1,35 @@
-# Helios — Autonomous Penetration Testing Platform
+# Helios
 
-Helios is an AI-orchestrated penetration testing platform that combines a LangGraph state machine, industry-standard security tooling, and LLM interpretation into a single automated pipeline. Point it at a web target or a local repository and it will fingerprint the stack, dynamically select the relevant scanners, interpret raw tool output with an LLM, build an attack chain graph, and deliver a structured vulnerability report — all streamed live to the UI.
+**Self-hosted, open-weight autonomous penetration testing. Your code and your findings never leave your machine.**
+
+Helios points a team of AI agents at a web target or a code repository, runs industry-standard security tooling, interprets the raw output with a *local* LLM, reasons about how the findings chain together, and delivers a MITRE ATT&CK–aligned vulnerability report — all streamed live to the UI. Point it at a URL or a repo and it fingerprints the stack, selects only the relevant scanners, validates and de-duplicates findings, builds a causal attack-chain graph, and writes the report.
+
+Unlike cloud pentesting platforms, **nothing is sent to a third-party API.** Helios runs entirely on infrastructure you control — a local Ollama model or your own fine-tuned open-weight model.
+
+---
+
+## Why Helios is different
+
+Autonomous AI pentesting is a crowded space, but every major platform is closed SaaS: you hand your targets, your source code, and your vulnerabilities to someone else's cloud. Helios is the opposite on three axes.
+
+**1. Local & sovereign.** Helios is fully self-hostable and air-gappable. Your source, your targets, and your findings stay on your own machine — the entire pipeline, including LLM inference, runs locally. For security-conscious teams, "we never exfiltrate your codebase" is the whole point.
+
+**2. Trained, not just prompted.** Most tools wrap a general-purpose cloud model. Helios is built to run a *purpose-trained* open-weight model for the task general models are weakest at: turning noisy scanner output into deduplicated, validated, exploit-chained findings. Swap in your own fine-tuned Qwen/Llama checkpoint via the standard provider interface.
+
+**3. Repo-native / shift-left.** Helios scans source repositories directly, not just live web targets — so it can run *before* you ship, as a pre-deployment or PR-time gate, rather than only after something is exposed.
+
+**Explainability as the output.** Helios doesn't just list CVEs. The attack-chain node reasons over the combined findings to produce a causal, MITRE-aligned graph showing how individual weaknesses chain into a realistic kill-chain.
+
+---
 
 ## How it works
 
 A **planner node** inspects the target first:
 
-- **URL targets** — runs a quick pre-scan fingerprint (httpx + whatweb) and uses LLM-driven adaptive planning to select relevant web agents. Under uncertain signal (timeouts/connection issues/localhost), guardrails keep a safe baseline of recon + SQL injection + XSS before attack chain + report.
-- **Repository targets** — walks the file tree, builds a fingerprint, and asks the LLM to choose only the relevant agents from: `static_c`, `static`, `deps_py`, `deps_js`, `secrets`.
+- **URL targets** — a quick fingerprint (httpx + whatweb), then LLM-driven adaptive planning selects the relevant web agents. Under uncertain signal, guardrails keep a safe baseline of recon + SQLi + XSS before the attack-chain and report stages.
+- **Repository targets** — walks the file tree, builds a fingerprint, and selects only the relevant agents from `static_c`, `static`, `deps_py`, `deps_js`, `secrets`.
 
-Each selected **agent node** runs its toolset, skips the LLM call if the tools fail to produce output, and accumulates structured findings into shared graph state. After all scan agents complete, an **attack chain node** reasons over the combined findings to produce a causal MITRE-aligned exploit graph. A final **report node** synthesises everything into a Markdown vulnerability report.
-
-LLM token streaming is pushed to the frontend in real time via SSE throughout every node.
+Each selected **agent node** runs its toolset, skips the LLM call if the tools produce no output, and accumulates structured findings into shared graph state. An **attack-chain node** then reasons over the combined findings to produce the MITRE-aligned exploit graph, and a final **report node** synthesises everything into a Markdown report. LLM token streaming is pushed to the frontend over SSE throughout.
 
 ## Agent pipeline
 
@@ -31,158 +49,48 @@ LLM token streaming is pushed to the frontend in real time via SSE throughout ev
 
 ## LLM providers
 
-Set `LLM_PROVIDER` in your environment to switch backends:
+Helios defaults to a **local** model so nothing leaves your machine. Set `LLM_PROVIDER` to switch backends:
 
-| Provider           | Env var           | Default model       |
-| ------------------ | ----------------- | ------------------- |
-| `ollama` (default) | `OLLAMA_MODEL`    | `llama3.1:8b`       |
-| `openai`           | `OPENAI_MODEL`    | `gpt-4o`            |
-| `claude`           | `ANTHROPIC_MODEL` | `claude-sonnet-4-6` |
+| Provider           | Env var           | Notes                                  |
+| ------------------ | ----------------- | -------------------------------------- |
+| `ollama` (default) | `OLLAMA_MODEL`    | Fully local inference                  |
+| `openai`           | `OPENAI_MODEL`    | OpenAI-compatible (incl. self-hosted)  |
+| `claude`           | `ANTHROPIC_MODEL` | Optional, for comparison               |
 
-For OpenAI-compatible providers (including Featherless), also set:
-
-- `OPENAI_BASE_URL` (example: `https://api.featherless.ai/v1`)
-- `OPENAI_API_KEY`
-- optional: `OPENAI_REQUEST_TIMEOUT_SECONDS` (default `12`)
-
-## Prerequisites
-
-- **Docker & Docker Compose** — runs the backend and all security binaries inside Linux containers
-- **pnpm** — runs the Next.js frontend natively
-- **Ollama** (if using the default local LLM) — must be running on your host machine. On macOS, run `launchctl setenv OLLAMA_HOST "0.0.0.0"` before starting Ollama so the backend container can reach it via `host.docker.internal`.
+To run your own fine-tuned checkpoint, serve it behind any OpenAI-compatible endpoint (e.g. vLLM) and point `OPENAI_BASE_URL` at it.
 
 ## Quick start (development)
 
-The development setup runs the backend inside Docker (for the security tools) and the frontend natively (for fast hot-reload). Your local Ollama instance is used for LLM inference.
-
-### 1. Start the backend and test target
+The backend runs inside Docker (for the security tooling); the frontend runs natively for fast hot-reload. Local inference is served by Ollama on the host.
 
 ```bash
+# 1. Backend + test target (OWASP Juice Shop)
 docker compose -f docker-compose.dev.yml up -d --build
-```
 
-- Backend API: `http://localhost:8000`
-- OWASP Juice Shop test target: `http://localhost:3001`
-
-The backend volume-mounts `./backend` so Python code changes hot-reload without a rebuild. If you change environment variables, prompts, or the Dockerfile, restart the container:
-
-```bash
-docker restart helios-dev-backend
-```
-
-### 2. Start the frontend
-
-```bash
+# 2. Frontend
 pnpm install
 pnpm dev
 ```
 
-Frontend: `http://localhost:3000`
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8000`
+- Test target: `http://localhost:3001`
 
-## Hosted frontend setup (Vercel/Netlify)
-
-If the frontend is deployed separately from the backend, configure one of these:
-
-- `BACKEND_API_URL=https://your-backend-domain` (recommended; built-in `/api/*` proxy), or
-- `NEXT_PUBLIC_API_URL=https://your-backend-domain` (direct browser calls)
-- `CORS_ALLOW_ORIGINS=https://your-frontend-domain` on the backend (required for direct browser calls)
-
-Without one of these, scan requests from the deployed UI will fail.
-
-### No-pay quick fix (works today)
-
-If you do not want paid APIs/hosting, run backend locally and expose it with a free tunnel:
-
-1. Start backend locally
-```bash
-docker compose -f docker-compose.dev.yml up -d --build
-```
-2. Expose backend with a free tunnel (Cloudflare)
-```bash
-cloudflared tunnel --url http://localhost:8000
-```
-3. Copy tunnel URL and set Vercel env:
-```bash
-BACKEND_API_URL=https://<your-tunnel-url>
-```
-4. Redeploy frontend.
-
-## Scanning targets
-
-**Web target (Juice Shop):**
-Because the backend runs inside Docker's network, use the container alias rather than `localhost`:
-
-```
-http://host.docker.internal:3001
-```
-
-**Public GitHub repository:**
-Submit a repository root URL directly:
-
-```
-https://github.com/owner/repository
-```
-
-Helios clones the repository inside the backend container runtime (named Docker
-volume mounted at `/var/helios/repos`) and scans that snapshot. Nothing is
-cloned into your local workspace.
-
-**Local repository:**
-Mount the repo into `/tmp` on your host and submit the container-side path:
-
-```bash
-cp -r /path/to/your/repo /tmp/myrepo
-# Submit: /tmp/myrepo
-```
-
-The dev compose file mounts `/tmp` and `/Users` read-only into the backend container.
-
-### Default allowlisted public examples
-
-Out-of-the-box allowlist includes:
-
-- `example.com`
-- `scanme.nmap.org`
-- `testphp.vulnweb.com` (demo target with likely findings)
-
-By default, Helios now accepts any valid `http(s)` URL target.
-To re-enable strict host allowlisting, set:
-
-```bash
-ENFORCE_TARGET_ALLOWLIST=true
-ALLOWED_TARGETS=example.com,scanme.nmap.org,testphp.vulnweb.com
-```
-
-## Featherless AI setup
-
-Use Featherless as an OpenAI-compatible backend by setting:
-
-```bash
-LLM_PROVIDER=openai
-OPENAI_BASE_URL=https://api.featherless.ai/v1
-OPENAI_API_KEY=<your-featherless-key>
-OPENAI_MODEL=<your-featherless-model>
-```
-
-## Useful Docker commands
-
-```bash
-# Stream backend logs
-docker logs helios-dev-backend -f
-
-# Restart backend (after env/prompt changes)
-docker restart helios-dev-backend
-
-# Stop everything
-docker compose -f docker-compose.dev.yml down
-```
-
-## Full stack (all-in-Docker, including Ollama and frontend)
-
-For a fully containerised deployment (no local dependencies):
+For a fully containerised stack (Ollama + backend + frontend + target):
 
 ```bash
 docker compose up -d --build
 ```
 
-This spins up Ollama, the backend, the Next.js frontend, and Juice Shop all within a shared Docker network.
+## Scanning targets
+
+- **Web target:** submit an `http(s)` URL (from inside the backend container, use `http://host.docker.internal:3001` for the bundled Juice Shop).
+- **Public repo:** submit a repository root URL; Helios clones it inside the backend container and scans that snapshot — nothing is cloned into your workspace.
+
+## Responsible use
+
+Helios is for testing systems you own or are explicitly authorised to assess. Scanning targets without permission may be illegal. By default, only an allowlist of safe public examples (`example.com`, `scanme.nmap.org`, `testphp.vulnweb.com`) is treated as sanctioned; keep `ENFORCE_TARGET_ALLOWLIST=true` in shared or production deployments.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
