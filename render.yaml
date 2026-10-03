@@ -15,8 +15,6 @@ services:
     envVars:
       - key: LLM_PROVIDER
         value: openai        # OpenAI-compatible endpoint (no local Ollama in the cloud)
-      - key: OPENAI_BASE_URL
-        value: https://api.featherless.ai/v1
       - key: OPENAI_API_KEY
         sync: false          # set in the Render dashboard — never commit a key
       - key: OPENAI_MODEL
