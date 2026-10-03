@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ComponentType } from "react"
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   Bot,
@@ -84,8 +84,64 @@ function stageCardClass(status: StageStatus): string {
   return "border-white/10 bg-[#0d1322]/70";
 }
 
+const HEADLINE_WORDS = ["Agentic", "Security", "Pipeline"];
+
+function AuroraBlob({ className, delay, reduce }: { className: string; delay: number; reduce: boolean }) {
+  return (
+    <motion.div
+      aria-hidden
+      className={`absolute rounded-full blur-3xl ${className}`}
+      animate={reduce ? undefined : { x: [0, 28, -18, 0], y: [0, -22, 18, 0], scale: [1, 1.12, 0.94, 1] }}
+      transition={reduce ? undefined : { duration: 20, delay, repeat: Infinity, ease: "easeInOut" }}
+    />
+  );
+}
+
+function KineticHeadline({ reduce }: { reduce: boolean }) {
+  return (
+    <h1 className="text-4xl font-semibold leading-[1.05] tracking-tight text-white md:text-6xl">
+      {HEADLINE_WORDS.map((word, i) => (
+        <motion.span
+          key={word}
+          className="mr-[0.25em] inline-block"
+          initial={reduce ? false : { opacity: 0, y: "0.5em", rotateX: -45 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{ delay: 0.2 + i * 0.1, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {word}
+        </motion.span>
+      ))}
+    </h1>
+  );
+}
+
+function Typewriter({ text, reduce }: { text: string; reduce: boolean }) {
+  const [shown, setShown] = useState(reduce ? text.length : 0);
+  useEffect(() => {
+    if (reduce) {
+      setShown(text.length);
+      return;
+    }
+    setShown(0);
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 1;
+      setShown(i);
+      if (i >= text.length) window.clearInterval(id);
+    }, 55);
+    return () => window.clearInterval(id);
+  }, [text, reduce]);
+  return (
+    <span className="text-cyan-100/90">
+      {text.slice(0, shown)}
+      <span className="ml-0.5 inline-block h-[0.95em] w-[0.5ch] translate-y-[0.14em] bg-cyan-300/80 motion-safe:animate-pulse" />
+    </span>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
+  const reduce = !!useReducedMotion();
   const [activeScanId, setActiveScanId] = useState<string | null>(null);
   const [activeScan, setActiveScan] = useState<ScanState | null>(null);
   const [startedTarget, setStartedTarget] = useState("");
@@ -264,33 +320,59 @@ export default function Home() {
     <PlatformShell>
       <main className="page-shell flex min-h-screen items-center justify-center">
         <div className="page-container flex w-full flex-col items-center gap-6 md:gap-7">
-          <section className="surface-panel w-full max-w-5xl overflow-hidden p-5 md:p-7">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28 }}
-              className="space-y-5 text-center"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <div className="rounded-2xl border border-white/15 bg-white/8 p-2.5">
-                  <Image
-                    src="/image.png"
-                    alt="Helios logo"
-                    width={40}
-                    height={40}
-                    className="rounded-xl"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-100/88">
-                    Helios
-                  </p>
-                  <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
-                    Agentic Security Pipeline
-                  </h1>
-                </div>
-              </div>
-            </motion.div>
+          <section className="surface-panel relative w-full max-w-5xl overflow-hidden p-8 md:p-14">
+            <div aria-hidden className="pointer-events-none absolute inset-0">
+              <AuroraBlob className="left-[6%] top-[-12%] h-64 w-64 bg-amber-500/25" delay={0} reduce={reduce} />
+              <AuroraBlob className="right-[4%] top-[8%] h-72 w-72 bg-orange-500/20" delay={2.5} reduce={reduce} />
+              <AuroraBlob className="bottom-[-20%] left-[36%] h-72 w-72 bg-cyan-500/18" delay={5} reduce={reduce} />
+              <AuroraBlob className="right-[30%] top-[-18%] h-56 w-56 bg-yellow-400/14" delay={1.2} reduce={reduce} />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center gap-5 text-center">
+              <motion.div
+                initial={reduce ? false : { opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="rounded-2xl border border-white/15 bg-white/8 p-2.5 shadow-[0_0_44px_-8px_rgba(251,191,36,0.45)]"
+              >
+                <Image src="/image.png" alt="Helios logo" width={44} height={44} className="rounded-xl" />
+              </motion.div>
+
+              <motion.p
+                initial={reduce ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
+                className="text-sm font-semibold uppercase tracking-[0.32em] text-amber-100/90"
+              >
+                Helios
+              </motion.p>
+
+              <KineticHeadline reduce={reduce} />
+
+              <motion.p
+                initial={reduce ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55, duration: 0.5 }}
+                className="max-w-xl text-sm leading-relaxed text-slate-300/85 md:text-base"
+              >
+                Self-hosted autonomous penetration testing. Your code and your findings never leave your machine.
+              </motion.p>
+
+              <motion.div
+                initial={reduce ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.75, duration: 0.5 }}
+                className="mt-1 inline-flex items-center gap-2 rounded-lg border border-white/12 bg-[#060b14]/85 px-3 py-2 font-mono text-xs text-slate-300"
+              >
+                <span className="flex gap-1">
+                  <span className="h-2 w-2 rounded-full bg-red-400/70" />
+                  <span className="h-2 w-2 rounded-full bg-amber-400/70" />
+                  <span className="h-2 w-2 rounded-full bg-emerald-400/70" />
+                </span>
+                <span className="ml-1 text-slate-500">$</span>
+                <Typewriter text="helios scan ./your-repo --local" reduce={reduce} />
+              </motion.div>
+            </div>
           </section>
 
           <section id="scan-form" className="w-full max-w-5xl">
