@@ -42,10 +42,12 @@ export function EvidenceDrawer({ finding, onClose }: Props) {
     };
   }, [finding, onClose]);
 
-  // Reset the copied state whenever a different finding is opened.
-  useEffect(() => {
+  // Reset the copied state whenever a different finding is opened (render-time reset).
+  const [lastFinding, setLastFinding] = useState<Finding | null>(finding);
+  if (finding !== lastFinding) {
+    setLastFinding(finding);
     setCopied(false);
-  }, [finding]);
+  }
 
   const styles = finding ? SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.info : SEVERITY_STYLES.info;
   const fixText = (finding?.remediation || "").trim() || FALLBACK_FIX;

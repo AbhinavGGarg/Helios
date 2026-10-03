@@ -118,11 +118,7 @@ function KineticHeadline({ reduce }: { reduce: boolean }) {
 function Typewriter({ text, reduce }: { text: string; reduce: boolean }) {
   const [shown, setShown] = useState(reduce ? text.length : 0);
   useEffect(() => {
-    if (reduce) {
-      setShown(text.length);
-      return;
-    }
-    setShown(0);
+    if (reduce) return;
     let i = 0;
     const id = window.setInterval(() => {
       i += 1;
