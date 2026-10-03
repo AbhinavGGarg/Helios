@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ShieldAlert, Wrench, X } from "lucide-react";
+import { Check, Copy, ShieldAlert, Wrench, X } from "lucide-react";
 import { Finding } from "@/types/scan";
 
 const SEVERITY_STYLES: Record<string, { badge: string; border: string }> = {
@@ -13,6 +13,9 @@ const SEVERITY_STYLES: Record<string, { badge: string; border: string }> = {
   info: { badge: "bg-white/10 text-slate-200 border-slate-300/30", border: "border-slate-300/30" },
 };
 
+const FALLBACK_FIX =
+  "Review the affected code path, enforce input/output controls, and apply targeted patches before rerunning the scan.";
+
 interface Props {
   finding: Finding | null;
   onClose: () => void;
@@ -20,6 +23,7 @@ interface Props {
 
 export function EvidenceDrawer({ finding, onClose }: Props) {
   const reducedMotion = useReducedMotion();
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!finding) return;
@@ -38,7 +42,25 @@ export function EvidenceDrawer({ finding, onClose }: Props) {
     };
   }, [finding, onClose]);
 
+  // Reset the copied state whenever a different finding is opened.
+  useEffect(() => {
+    setCopied(false);
+  }, [finding]);
+
   const styles = finding ? SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.info : SEVERITY_STYLES.info;
+  const fixText = (finding?.remediation || "").trim() || FALLBACK_FIX;
+
+  async function copyFix() {
+    if (!finding) return;
+    const payload = `${finding.title} (${finding.severity})\nComponent: ${finding.component || "n/a"}\n\nFix:\n${fixText}`;
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard may be unavailable (insecure context); fail silently.
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -87,8 +109,26 @@ export function EvidenceDrawer({ finding, onClose }: Props) {
             </header>
 
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+              {/* Fix leads — the whole point is helping the owner remediate. */}
+              <section className="rounded-xl border border-emerald-300/30 bg-emerald-400/[0.06] p-4">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-200">
+                    <Wrench className="h-3.5 w-3.5" />
+                    How to fix
+                  </p>
+                  <button
+                    onClick={copyFix}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium text-emerald-100 transition-colors hover:bg-emerald-400/20"
+                  >
+                    {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied ? "Copied" : "Copy fix"}
+                  </button>
+                </div>
+                <p className="text-sm leading-relaxed text-emerald-50/90">{fixText}</p>
+              </section>
+
               <section>
-                <p className="section-kicker mb-2">Description</p>
+                <p className="section-kicker mb-2">Why it matters</p>
                 <p className="text-sm leading-relaxed text-slate-300/85">{finding.description}</p>
               </section>
 
@@ -100,14 +140,6 @@ export function EvidenceDrawer({ finding, onClose }: Props) {
                   </pre>
                 </section>
               ) : null}
-
-              <section>
-                <p className="section-kicker mb-2">Remediation</p>
-                <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-sm leading-relaxed text-slate-300/85">
-                  {finding.remediation ||
-                    "Review the affected code path, enforce input/output controls, and apply targeted patches before rerunning the scan."}
-                </p>
-              </section>
 
               <section className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                 <div className="grid gap-2 text-xs text-slate-300/80">
