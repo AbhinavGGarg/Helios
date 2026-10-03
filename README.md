@@ -91,7 +91,7 @@ docker compose up -d --build
 
 Helios is built to run locally, but you can stand up a hosted instance for demos. The backend deploys to **Render** and the frontend to **Vercel**.
 
-**Backend (Render).** The repo ships a `render.yaml` blueprint. In Render, create a new Blueprint from this repo; it builds `docker/Dockerfile.backend` as a web service. Set these secrets in the dashboard (they are `sync: false` in the blueprint, never committed): `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally `CORS_ALLOW_ORIGINS`. A hosted instance has no local Ollama, so it uses an OpenAI-compatible provider (default base URL points at Featherless). Security tooling is memory-heavy, so use at least the `starter` plan.
+**Backend (Render).** The repo ships a `render.yaml` blueprint. In Render, create a new Blueprint from this repo; it builds `docker/Dockerfile.backend` as a web service. Set these secrets in the dashboard (they are `sync: false` in the blueprint, never committed): `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally `CORS_ALLOW_ORIGINS`. A hosted instance has no local Ollama, so it uses an OpenAI-compatible provider (default base URL points at Featherless). The blueprint uses Render's **free** tier ($0); it sleeps after ~15 min idle (expect a slow first request) and has 512MB RAM, so very heavy scans may need a bump to a paid plan. Repo clones use ephemeral storage — no paid disk required.
 
 **Frontend (Vercel).** Deploy the Next.js app and set `BACKEND_API_URL` to your Render backend URL. The built-in `/api/*` proxy forwards browser requests to the backend, so no CORS setup is needed in that path.
 
