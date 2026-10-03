@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
-import { ArrowLeft, Calendar, Download, FileText, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Calendar, Check, Download, FileText, ListChecks, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { PlatformShell, GlassPanel, SectionHeading } from "@/components/platform-shell";
@@ -131,6 +131,7 @@ export default function ReportPage() {
   const [report, setReport] = useState<string | null>(null);
   const [target, setTarget] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fixesCopied, setFixesCopied] = useState(false);
 
   const scanDate = useMemo(
     () =>
@@ -183,6 +184,26 @@ export default function ReportPage() {
     a.download = `helios-report-${id.slice(0, 8)}.md`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // Pull just the actionable fixes out of the report so they can be pasted into a ticket or PR.
+  function extractFixes(md: string): string {
+    const plan = md.match(/##\s*Remediation Plan[\s\S]*?(?=\n##\s|\n#\s|$)/i);
+    if (plan) return plan[0].trim();
+    const fixes = [...md.matchAll(/\*\*Remediation:\*\*\s*(.+)/gi)].map((m) => `- [ ] ${m[1].trim()}`);
+    return fixes.length ? `## Remediation Plan\n\n${fixes.join("\n")}` : md;
+  }
+
+  function copyFixes() {
+    if (!report) return;
+    const header = `# Remediation checklist \u2014 ${target || "scan"}\n\n`;
+    navigator.clipboard.writeText(header + extractFixes(report)).then(
+      () => {
+        setFixesCopied(true);
+        setTimeout(() => setFixesCopied(false), 1800);
+      },
+      () => {},
+    );
   }
 
   if (error) {
@@ -264,6 +285,14 @@ export default function ReportPage() {
                 >
                   <Download className="h-4 w-4" />
                   Export .md
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={copyFixes}
+                  className="border-emerald-300/30 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20"
+                >
+                  {fixesCopied ? <Check className="h-4 w-4" /> : <ListChecks className="h-4 w-4" />}
+                  {fixesCopied ? "Copied" : "Copy fixes"}
                 </Button>
                 <Button
                   variant="outline"
