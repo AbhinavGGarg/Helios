@@ -9,8 +9,6 @@ services:
     runtime: docker
     dockerfilePath: ./docker/Dockerfile.backend
     dockerContext: .
-    # Bind to the port Render assigns ($PORT) instead of the fixed 8000.
-    dockerCommand: sh -c "uv run fastapi run backend/main.py --host 0.0.0.0 --port ${PORT:-8000}"
     plan: free               # $0. Trade-offs: 512MB RAM, sleeps after ~15min idle (slow first request).
     healthCheckPath: /
     autoDeploy: true
